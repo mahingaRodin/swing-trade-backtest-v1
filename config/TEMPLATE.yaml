@@ -1,0 +1,23 @@
+# config/TEMPLATE.yaml
+#
+# Copy this to config/<symbol>_<timeframe>.yaml when you start testing a new
+# market, e.g. config/eurusd_4h.yaml or config/btcusd_1d.yaml.
+#
+# Start with base.yaml's values unchanged, run the dev/out-of-sample
+# validation on THIS market's own data, and only then adjust the
+# numbers below based on what you find -- don't guess-adjust before testing.
+#
+# One value you almost certainly DO need to change per market:
+#   slippage_price -- this is in raw price units, not pips. 0.0002 makes
+#   sense for GBPUSD (~2 pips). For gold (XAUUSD) that same 0.0002 is
+#   meaningless; for BTCUSD you'd want something like 5-20 (dollars),
+#   not 0.0002. Set this to roughly what you'd actually expect to lose
+#   to slippage on one fill, in that market's own price units.
+
+swing_n: 5
+sl_buffer_atr: 0.75
+rr_target: 2.0
+sl_tolerance_atr: 0.15
+max_hold_bars: 60
+slippage_price: 0.0002   # CHANGE THIS per market -- see note above
+fee_pct: 0.0002

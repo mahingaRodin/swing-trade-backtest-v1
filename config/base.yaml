@@ -1,0 +1,22 @@
+# config/base.yaml
+#
+# The locked-in swing/fib-discount strategy parameters, validated on
+# GBPUSD 4H (2020-2026): dev-period expectancy +0.30R, out-of-sample
+# +0.23R over 16 trades. See research/paper_trading_playbook.md for
+# the full writeup and its limits.
+#
+# IMPORTANT: these numbers are NOT guaranteed to transfer to a new
+# market or timeframe as-is. Most of them (swing_n, sl_buffer_atr,
+# retracement candle count) are relative to that market's own
+# volatility/behavior, which is why they're likely a reasonable
+# STARTING point elsewhere -- but "reasonable starting point" is not
+# "proven." Copy this file per market (see config/TEMPLATE.yaml) and
+# re-run the dev/out-of-sample validation before trusting it.
+
+swing_n: 5              # bars each side required to confirm a swing high/low
+sl_buffer_atr: 0.75      # stop-loss sits this many ATR(14) beyond the support/resistance level
+rr_target: 2.0           # take-profit distance, as a multiple of risk (1:2)
+sl_tolerance_atr: 0.15   # support/resistance clustering tolerance, in ATR multiples
+max_hold_bars: 60        # time-stop: close the trade if neither SL nor TP hit within this many bars
+slippage_price: 0.0002   # assumed adverse fill vs signal price (raw price units -- NOT pips, adjust per market)
+fee_pct: 0.0002          # fee per side, as a fraction of notional (0.0002 = 0.02%)
