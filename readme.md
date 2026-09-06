@@ -1,0 +1,1 @@
+### Checking First The Trading View Scripts.
