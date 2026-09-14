@@ -16,6 +16,7 @@ timing when using the cleaned frame.
 from __future__ import annotations
 
 import logging
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Literal
@@ -42,6 +43,7 @@ TIMEFRAME_TO_OFFSET: dict[str, str] = {
     "12h": "12h",
     "1d": "1D",
     "1w": "1W",
+    "1mo": "30D",
 }
 
 
@@ -579,3 +581,45 @@ def load_ohlcv(
     report.source = str(path)
     report.log_summary()
     return cleaned, report
+
+
+def _infer_tradingview_timeframe(path: Path) -> str:
+    """Infer a pandas-compatible timeframe from a TradingView filename."""
+    match = re.search(r",\s*(\d+)([mhdwM]?)(?:_|\.)", path.stem)
+    if not match:
+        return "1d"
+
+    value, unit = int(match.group(1)), match.group(2)
+    if not unit:
+        return f"{value // 60}h" if value % 60 == 0 else f"{value}m"
+    if unit == "m":
+        return f"{value}m"
+    if unit == "h":
+        return f"{value}h"
+    if unit == "d":
+        return f"{value}d"
+    if unit == "w":
+        return f"{value}w" if value == 1 else "1w"
+    return "1mo" if value == 1 else "1d"
+
+
+def load_tradingview_csv(
+    path: str | Path,
+    *,
+    timeframe: str | None = None,
+    config: DataConfig | None = None,
+) -> pd.DataFrame:
+    """Load a TradingView CSV using the canonical OHLCV cleaning pipeline.
+
+    TradingView exports use Unix-second ``time`` values and may include
+    indicator columns. Extra columns are preserved for research, while the
+    required OHLCV columns are normalized and validated.
+    """
+    source = Path(path)
+    raw = _read_file(source)
+    raw = raw.rename(columns={"time": "timestamp", "Volume": "volume"})
+    if "timestamp" in raw.columns:
+        raw["timestamp"] = pd.to_datetime(raw["timestamp"], unit="s", utc=True)
+    selected_timeframe = timeframe or _infer_tradingview_timeframe(source)
+    cleaned, _ = clean_ohlcv(raw, timeframe=selected_timeframe, config=config)
+    return cleaned

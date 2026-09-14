@@ -232,13 +232,19 @@ def main():
 
     win_rate = len(wins) / len(closed) if len(closed) else float("nan")
     avg_r = closed["r_multiple"].mean() if len(closed) else float("nan")
-    expectancy = (win_rate * wins["r_multiple"].mean() if len(wins) else 0) + \
-                 ((1 - win_rate) * -1 if len(losses) else 0)
+    avg_win_r = wins["r_multiple"].mean() if len(wins) else float("nan")
+    avg_loss_r = losses["r_multiple"].mean() if len(losses) else float("nan")
+    expectancy = avg_r
+    gross_profit = wins["r_multiple"].sum()
+    gross_loss = abs(losses["r_multiple"].sum())
+    profit_factor = gross_profit / gross_loss if gross_loss else float("inf")
 
     print(f"By direction: {out_df['direction'].value_counts().to_dict()}")
     print(f"Closed trades: {len(closed)}  (still open / hit time-stop: {len(still_open)})")
     print(f"Win rate:   {win_rate:.1%}")
     print(f"Avg R (closed trades): {avg_r:.2f}")
+    print(f"Avg win / loss: {avg_win_r:.2f}R / {avg_loss_r:.2f}R")
+    print(f"Profit factor: {profit_factor:.2f}")
     print(f"Expectancy: {expectancy:.2f}R per trade")
     print()
     print(f"Full trade log written to: {args.out}")
