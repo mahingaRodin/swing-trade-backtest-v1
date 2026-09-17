@@ -13,3 +13,5 @@ data/processed/
 
 .env
 .env.deploy
+
+t-view/screenshots/
