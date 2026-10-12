@@ -32,6 +32,14 @@ from quant.patterns import three_candle_retracement, is_confirmation
 from quant.config import load_config
 
 
+def levels_known_at(df, c, swing_n, tolerance_atr_mult):
+    """Support/resistance levels using only swings confirmed by the close of bar c."""
+    hist = df.iloc[:c + 1].copy()
+    unknown = [hist.columns.get_loc("swing_high"), hist.columns.get_loc("swing_low")]
+    hist.iloc[-swing_n:, unknown] = False      # last n bars: pivots not confirmed yet
+    return find_levels(hist, tolerance_atr_mult=tolerance_atr_mult)
+
+
 def leg_confirmed_by(swings_list, cutoff_idx):
     """Latest confirmed alternating swing-high/swing-low pair, using only
     swing points whose original index <= cutoff_idx (i.e. known by then)."""
@@ -174,7 +182,7 @@ def main():
         history_slice = df.iloc[:c + 1]
         history_slice = history_slice.assign(swing_high=df["swing_high"].iloc[:c + 1],
                                               swing_low=df["swing_low"].iloc[:c + 1])
-        sr_levels = find_levels(history_slice, tolerance_atr_mult=args.sl_tolerance_atr)
+        sr_levels = levels_known_at(df, c, args.swing_n, args.sl_tolerance_atr)
         current_atr = atr_series.iloc[c] if pd.notna(atr_series.iloc[c]) else df["close"].iloc[:c+1].std() * 0.01
 
         if direction == "buy":
