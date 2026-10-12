@@ -44,13 +44,38 @@ def test_same_bar_touches_stop_and_target_counts_as_loss():
     assert r == pytest.approx(-1.0)
 
 
-def test_no_exit_within_max_bars_is_open_with_zero_r():
-    df = bars(*[(100, 100.4, 99.6, 100)] * 5)
+def test_time_stop_exits_at_last_bar_close_after_costs():
+    df = bars((100, 100.4, 99.6, 100),
+              (100, 100.4, 99.6, 100),
+              (101, 101.6, 100.9, 101.5))
+    outcome, r, held = simulate_outcome(df, 0, entry=100, stop=99, target=102,
+                                        direction="buy", max_bars=3,
+                                        slippage_price=0.1, fee_pct=0.001)
+    assert outcome == "TIME_STOP"
+    assert r == pytest.approx(1.0998)
+    assert held == 3
+
+
+def test_sell_time_stop_applies_adverse_exit_slippage():
+    df = bars((100, 100.4, 99.6, 100),
+              (100, 100.4, 99.6, 100),
+              (99, 99.2, 98.4, 98.5))
+    outcome, r, held = simulate_outcome(df, 0, entry=100, stop=101, target=98,
+                                        direction="sell", max_bars=3,
+                                        slippage_price=0.1, fee_pct=0.001)
+    assert outcome == "TIME_STOP"
+    assert r == pytest.approx(1.1002)
+    assert held == 3
+
+
+def test_insufficient_history_remains_open():
+    df = bars((100, 100.4, 99.6, 100),
+              (100, 100.4, 99.6, 100))
     outcome, r, held = simulate_outcome(df, 0, entry=100, stop=99, target=102,
                                         direction="buy", max_bars=3)
     assert outcome == "OPEN"
     assert r == 0.0
-    assert held == 3
+    assert held == 2
 
 
 def test_zero_risk_is_skipped():

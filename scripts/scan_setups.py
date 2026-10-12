@@ -73,7 +73,7 @@ def simulate_outcome(df, entry_idx, entry, stop, target, direction, max_bars=60,
     fee_pct:         fraction (e.g. 0.0002 = 0.02%) of notional, charged on
                      BOTH the entry and the exit -- a full round trip.
 
-    Returns ('WIN'|'LOSS'|'OPEN', R_multiple_after_costs, bars_held).
+    Returns ('WIN'|'LOSS'|'TIME_STOP'|'OPEN', R_multiple_after_costs, bars_held).
     """
     risk = abs(entry - stop)
     if risk == 0:
@@ -83,7 +83,8 @@ def simulate_outcome(df, entry_idx, entry, stop, target, direction, max_bars=60,
     entry_filled = entry + slippage_price if direction == "buy" else entry - slippage_price
     fee_r = (entry_filled * fee_pct * 2) / risk  # both legs charged, converted to R
 
-    for k in range(entry_idx, min(entry_idx + max_bars, len(df))):
+    bars_available = max(0, min(max_bars, len(df) - entry_idx))
+    for k in range(entry_idx, entry_idx + bars_available):
         bar = df.iloc[k]
         if direction == "buy":
             if bar["low"] <= stop:
@@ -103,7 +104,18 @@ def simulate_outcome(df, entry_idx, entry, stop, target, direction, max_bars=60,
                 exit_filled = target + slippage_price
                 r = (entry_filled - exit_filled) / risk - fee_r
                 return "WIN", r, k - entry_idx
-    return "OPEN", 0.0, max_bars
+
+    if bars_available < max_bars:
+        return "OPEN", 0.0, bars_available
+
+    close = df.iloc[entry_idx + max_bars - 1]["close"]
+    if direction == "buy":
+        exit_filled = close - slippage_price
+        r = (exit_filled - entry_filled) / risk - fee_r
+    else:
+        exit_filled = close + slippage_price
+        r = (entry_filled - exit_filled) / risk - fee_r
+    return "TIME_STOP", r, max_bars
 
 
 def main():
@@ -179,9 +191,6 @@ def main():
 
         entry_idx = c + 1
         entry = df.iloc[entry_idx]["open"]
-        history_slice = df.iloc[:c + 1]
-        history_slice = history_slice.assign(swing_high=df["swing_high"].iloc[:c + 1],
-                                              swing_low=df["swing_low"].iloc[:c + 1])
         sr_levels = levels_known_at(df, c, args.swing_n, args.sl_tolerance_atr)
         current_atr = atr_series.iloc[c] if pd.notna(atr_series.iloc[c]) else df["close"].iloc[:c+1].std() * 0.01
 
@@ -233,9 +242,12 @@ def main():
         print("No setups found -- try a different --swing-n or check the rule logic against a manual example.")
         return
 
-    closed = out_df[out_df["outcome"].isin(["WIN", "LOSS"])]
-    wins = closed[closed["outcome"] == "WIN"]
-    losses = closed[closed["outcome"] == "LOSS"]
+    closed = out_df[out_df["outcome"].isin(["WIN", "LOSS", "TIME_STOP"])]
+    wins = closed[closed["r_multiple"] > 0]
+    losses = closed[closed["r_multiple"] < 0]
+    target_wins = closed[closed["outcome"] == "WIN"]
+    stop_losses = closed[closed["outcome"] == "LOSS"]
+    time_stops = closed[closed["outcome"] == "TIME_STOP"]
     still_open = out_df[out_df["outcome"] == "OPEN"]
 
     win_rate = len(wins) / len(closed) if len(closed) else float("nan")
@@ -248,8 +260,10 @@ def main():
     profit_factor = gross_profit / gross_loss if gross_loss else float("inf")
 
     print(f"By direction: {out_df['direction'].value_counts().to_dict()}")
-    print(f"Closed trades: {len(closed)}  (still open / hit time-stop: {len(still_open)})")
-    print(f"Win rate:   {win_rate:.1%}")
+    print(f"Closed trades: {len(closed)}  (target hits: {len(target_wins)}, "
+          f"stop hits: {len(stop_losses)}, time-stops: {len(time_stops)}, "
+          f"incomplete: {len(still_open)})")
+    print(f"Win rate (positive net R): {win_rate:.1%}")
     print(f"Avg R (closed trades): {avg_r:.2f}")
     print(f"Avg win / loss: {avg_win_r:.2f}R / {avg_loss_r:.2f}R")
     print(f"Profit factor: {profit_factor:.2f}")

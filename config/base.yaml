@@ -1,9 +1,9 @@
 # config/base.yaml
 #
-# The locked-in swing/fib-discount strategy parameters, validated on
-# GBPUSD 4H (2020-2026): dev-period expectancy +0.30R, out-of-sample
-# +0.23R over 16 trades. See research/paper_trading_playbook.md for
-# the full writeup and its limits.
+# Swing/fib-discount starting parameters for GBPUSD 4H.
+# The earlier +0.30R development / +0.23R out-of-sample claims were not
+# reproduced by the corrected portfolio rerun. See
+# research/paper_trading_playbook.md for current results and assumptions.
 #
 # IMPORTANT: these numbers are NOT guaranteed to transfer to a new
 # market or timeframe as-is. Most of them (swing_n, sl_buffer_atr,
