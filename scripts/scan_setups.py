@@ -24,7 +24,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pandas as pd
-from quant.data import load_tradingview_csv
+from quant.data import load_newApp_csv
 from quant.swings import detect_swings
 from quant.fibonacci import fib_levels, zone
 from quant.levels import find_levels, atr
@@ -154,7 +154,7 @@ def main():
 
     args = parser.parse_args()
 
-    df = load_tradingview_csv(args.file)
+    df = load_newApp_csv(args.file)
     if args.start_date:
         df = df[df.index >= pd.Timestamp(args.start_date, tz="UTC")]
     if args.end_date:

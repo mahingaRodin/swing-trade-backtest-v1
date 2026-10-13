@@ -16,14 +16,14 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pandas as pd
 
 from quant.config import load_config
-from quant.data import load_tradingview_csv
+from quant.data import load_newApp_csv
 from quant.portfolio import portfolio_metrics, run_portfolio_backtest
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default=os.path.join("config", "base.yaml"))
-    parser.add_argument("--file", required=True, help="TradingView OHLCV CSV")
+    parser.add_argument("--file", required=True, help="newApp OHLCV CSV")
     parser.add_argument("--setups", required=True, help="CSV written by scan_setups.py")
     parser.add_argument("--out-dir", default=os.path.join("research", "portfolio"))
     parser.add_argument(
@@ -49,7 +49,7 @@ def main() -> None:
         parser.error("pip size must be positive and spread values must be non-negative")
 
     config = load_config(args.config)
-    bars = load_tradingview_csv(args.file)
+    bars = load_newApp_csv(args.file)
     if args.data_end_date:
         data_end = pd.Timestamp(args.data_end_date, tz="UTC") + pd.Timedelta(days=1)
         bars = bars[bars.index < data_end]

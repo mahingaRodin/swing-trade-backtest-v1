@@ -3,15 +3,15 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from quant.data import (DataConfig, _infer_tradingview_timeframe, clean_ohlcv,
-                        detect_gaps, load_tradingview_csv)
+from quant.data import (DataConfig, _infer_newApp_timeframe, clean_ohlcv,
+                        detect_gaps, load_newApp_csv)
 
 T0 = 1_704_067_200          # 2024-01-01 00:00:00 UTC in Unix seconds
 H4 = 4 * 3600
 
 
 def raw_frame(times, **overrides):
-    """A small TradingView-style frame (Unix 'time', capital-V 'Volume', one extra column)."""
+    """A small newApp-style frame (Unix 'time', capital-V 'Volume', one extra column)."""
     n = len(times)
     df = pd.DataFrame({
         "time": times,
@@ -26,11 +26,11 @@ def raw_frame(times, **overrides):
 
 # ---------- loading ----------
 
-def test_tradingview_csv_loads_with_utc_index_and_keeps_extras(tmp_path):
+def test_newApp_csv_loads_with_utc_index_and_keeps_extras(tmp_path):
     path = tmp_path / "TEST_GBPUSD, 240_abc12.csv"
     raw_frame([T0, T0 + H4, T0 + 2 * H4]).to_csv(path, index=False)
 
-    df = load_tradingview_csv(path)
+    df = load_newApp_csv(path)
 
     assert str(df.index.tz) == "UTC"
     assert df.index[0] == pd.Timestamp("2024-01-01 00:00", tz="UTC")
@@ -40,16 +40,16 @@ def test_tradingview_csv_loads_with_utc_index_and_keeps_extras(tmp_path):
 
 # ---------- timeframe inference ----------
 
-def test_timeframe_inferred_from_tradingview_filename():
-    assert _infer_tradingview_timeframe(Path("BITSTAMP_GBPUSD, 240_e573d.csv")) == "4h"
-    assert _infer_tradingview_timeframe(Path("OANDA_GBPUSD, 60_ab12c.csv")) == "1h"
-    assert _infer_tradingview_timeframe(Path("OANDA_GBPUSD, 15_ab12c.csv")) == "15m"
+def test_timeframe_inferred_from_newApp_filename():
+    assert _infer_newApp_timeframe(Path("BITSTAMP_GBPUSD, 240_e573d.csv")) == "4h"
+    assert _infer_newApp_timeframe(Path("OANDA_GBPUSD, 60_ab12c.csv")) == "1h"
+    assert _infer_newApp_timeframe(Path("OANDA_GBPUSD, 15_ab12c.csv")) == "15m"
 
 
 @pytest.mark.xfail(reason="Regex needs '_' or '.' after the number; a name like "
                           "'..., 240.csv' (no hash) falls back to '1d'.")
 def test_timeframe_inferred_when_filename_has_no_hash():
-    assert _infer_tradingview_timeframe(Path("OANDA_GBPUSD, 240.csv")) == "4h"
+    assert _infer_newApp_timeframe(Path("OANDA_GBPUSD, 240.csv")) == "4h"
 
 
 # ---------- cleaning ----------

@@ -1,7 +1,7 @@
 """
 scripts/analyze_setup.py
 
-Reads a TradingView CSV export, finds the most recent confirmed swing leg,
+Reads a newApp CSV export, finds the most recent confirmed swing leg,
 computes Fib levels, checks if price is in discount/premium, finds nearby
 support/resistance, and reports candidate entry/stop/target levels at
 1:2 and 1:3 risk:reward.
@@ -21,7 +21,7 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from quant.data import load_tradingview_csv
+from quant.data import load_newApp_csv
 from quant.swings import detect_swings, latest_confirmed_leg
 from quant.fibonacci import fib_levels, zone
 from quant.levels import find_levels
@@ -29,12 +29,12 @@ from quant.levels import find_levels
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--file", required=True, help="Path to TradingView CSV export")
+    parser.add_argument("--file", required=True, help="Path to newApp CSV export")
     parser.add_argument("--swing-n", type=int, default=2, help="Bars each side to confirm a swing")
     parser.add_argument("--sl-buffer-atr", type=float, default=0.25, help="Stop-loss buffer, in ATR multiples")
     args = parser.parse_args()
 
-    df = load_tradingview_csv(args.file)
+    df = load_newApp_csv(args.file)
     df = detect_swings(df, n=args.swing_n)
 
     leg = latest_confirmed_leg(df)

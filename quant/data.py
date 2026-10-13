@@ -583,8 +583,8 @@ def load_ohlcv(
     return cleaned, report
 
 
-def _infer_tradingview_timeframe(path: Path) -> str:
-    """Infer a pandas-compatible timeframe from a TradingView filename."""
+def _infer_newApp_timeframe(path: Path) -> str:
+    """Infer a pandas-compatible timeframe from a newApp filename."""
     match = re.search(r",\s*(\d+)([mhdwM]?)(?:_|\.)", path.stem)
     if not match:
         return "1d"
@@ -603,15 +603,15 @@ def _infer_tradingview_timeframe(path: Path) -> str:
     return "1mo" if value == 1 else "1d"
 
 
-def load_tradingview_csv(
+def load_newApp_csv(
     path: str | Path,
     *,
     timeframe: str | None = None,
     config: DataConfig | None = None,
 ) -> pd.DataFrame:
-    """Load a TradingView CSV using the canonical OHLCV cleaning pipeline.
+    """Load a newApp CSV using the canonical OHLCV cleaning pipeline.
 
-    TradingView exports use Unix-second ``time`` values and may include
+    newApp exports use Unix-second ``time`` values and may include
     indicator columns. Extra columns are preserved for research, while the
     required OHLCV columns are normalized and validated.
     """
@@ -620,6 +620,6 @@ def load_tradingview_csv(
     raw = raw.rename(columns={"time": "timestamp", "Volume": "volume"})
     if "timestamp" in raw.columns:
         raw["timestamp"] = pd.to_datetime(raw["timestamp"], unit="s", utc=True)
-    selected_timeframe = timeframe or _infer_tradingview_timeframe(source)
+    selected_timeframe = timeframe or _infer_newApp_timeframe(source)
     cleaned, _ = clean_ohlcv(raw, timeframe=selected_timeframe, config=config)
     return cleaned

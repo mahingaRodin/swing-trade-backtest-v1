@@ -117,7 +117,7 @@ history or investment advice.
 - GBP/USD positions are counted as gross exposure. Long and short positions
   are not netted, and all positions in this one pair share the same risk cap.
   This does not model cross-pair correlation or diversification.
-- TradingView OHLC values are treated as mid prices because historical
+- newApp OHLC values are treated as mid prices because historical
   bid/ask quotes are unavailable. Full spread widths of 0.5, 1, and 2 pips
   are illustrative assumptions, split equally across entry and exit. The
   configured 0.0002 price-unit slippage is adverse on each fill; the
@@ -176,7 +176,7 @@ elsewhere. It does **not** mean they're proven elsewhere.
 Steps to actually validate on a new chart:
 
 1. Export that market's OHLCV as CSV, same way as before (`⋯ → Export
-   chart data` on TradingView).
+   chart data` on newApp).
 2. Copy `config/TEMPLATE.yaml` to `config/<symbol>_<timeframe>.yaml`.
    Change `slippage_price` to something sane for that market's price
    units (2 pips ≈ 0.0002 for GBPUSD; that number means nothing for
